@@ -48,7 +48,7 @@ public class Rivet {
 	private DisplayView display_view;
 	private static Rivet theApp;
 	private static DisplayFrame window;
-	public final String program_version="Rivet (Build 90)";
+	public final String program_version="RivetZ (Build 90)";
 	public int vertical_scrollbar_value=0;
 	public int horizontal_scrollbar_value=0;
 	public boolean pReady=false;
@@ -92,11 +92,11 @@ public class Rivet {
 	private long lastUserScroll=0;
 	private boolean smallScreen=false;
 	private boolean displayBadPackets=false;
-	private boolean logInUTC=false;
+	private boolean logInUTC=true;
 	private List<Ship> listLoggedShips=new ArrayList<Ship>();
 	
 	// Mode names
-	public final String MODENAMES[]={
+	public final String[] MODENAMES ={
 			"CROWD36",
 			"XPA (10 Baud)",
 			"XPA2",
@@ -127,8 +127,8 @@ public class Rivet {
 			}
 		// The main loop
 		while (RUNNING)	{
-			if ((theApp.wavFileLoadOngoing==true)&&(theApp.pReady==true)) theApp.getWavData();
-			else if ((theApp.inputThread.getAudioReady()==true)&&(theApp.pReady==true)) theApp.getAudioData();
+			if ((theApp.wavFileLoadOngoing)&&(theApp.pReady)) theApp.getWavData();
+			else if ((theApp.inputThread.getAudioReady())&&(theApp.pReady)) theApp.getAudioData();
 			else	{
 				// Add the following so the thread doesn't eat all of the CPU time
 				try	{Thread.sleep(1);}
@@ -192,63 +192,51 @@ public class Rivet {
 	}
 	
 	public boolean isCROWD36()	{
-		if (system==0) return true;
-		else return false;
+		return system == 0;
 	}
 	
 	public boolean isXPA_10()	{
-		if (system==1) return true;
-		else return false;
+		return system == 1;
 	}
 	
 	public boolean isXPA_20()	{
-		if (system==3) return true;
-		else return false;
+		return system == 3;
 	}
 	
 	public boolean isXPA2()	{
-		if (system==2) return true;
-		else return false;
+		return system == 2;
 	}
 	
 	public boolean isExperimental()	{
-		if (system==4) return true;
-		else return false;
+		return system == 4;
 	}
 	
 	public boolean isCIS3650()	{
-		if (system==5) return true;
-		else return false;
+		return system == 5;
 	}
 	
 	public boolean isFSK200500()	{
-		if (system==6) return true;
-		else return false;
+		return system == 6;
 		}
 	
 	public boolean isCCIR493()	{
-		if (system==7) return true;
-		else return false;
+		return system == 7;
 		}
 	
 	public boolean isFSK2001000()	{
-		if (system==8) return true;
-		else return false;
+		return system == 8;
 		}	
 	
 	public boolean isGW()	{
-		if (system==9) return true;
-		else return false;
+		return system == 9;
 	}
 	
 	public boolean isRTTY()	{
-		if (system==10) return true;
-		else return false;
+		return system == 10;
 	}
 	
 	public boolean isFSK()	{
-		if (system==11) return true;
-		else return false;
+		return system == 11;
 	}
 		
 	// Tell the input thread to start to load a .WAV file
@@ -323,7 +311,7 @@ public class Rivet {
 				}
 				
 				// Once the buffer data has been read we are done
-				if (wavFileLoadOngoing==true)	{
+				if (wavFileLoadOngoing)	{
 					String disp=getTimeStamp()+" WAV file loaded and analysis complete ("+Long.toString(inputThread.getSampleCounter())+" samples read)";
 					writeLine(disp,Color.BLACK,italicFont);		
 					wavFileLoadOngoing=false;
@@ -358,30 +346,22 @@ public class Rivet {
 	private void processData ()	{		
 		try	{
 			boolean res=false;
-			// CROWD36
-			if (system==0) res=crowd36Handler.decode(circBuffer,waveData);
-			// XPA
-			else if ((system==1)||(system==3)) res=xpaHandler.decode(circBuffer,waveData);
-			// XPA2
-			else if (system==2)	res=xpa2Handler.decode(circBuffer,waveData);
-			// Experimental
-			//else if (system==4)	res=
-			// CIS36-50
-			else if (system==5)	res=cis3650Handler.decode(circBuffer,waveData);
-			// FSK200/500
-			else if (system==6)	res=fsk200500Handler.decode(circBuffer,waveData);
-			// CCIR493-4
-			else if (system==7)	res=ccir493Handler.decode(circBuffer,waveData);
-			// FSK200/1000
-			else if (system==8)	res=fsk2001000Handler.decode(circBuffer,waveData);
-			// GW
-			else if (system==9) res=gwHandler.decode(circBuffer,waveData);
-			// RTTY
-			else if (system==10) res=rttyHandler.decode(circBuffer,waveData);
-			// FSK (raw)
-			else if (system==11) res=fskHandler.decode(circBuffer,waveData);
+			switch(system){
+				case 0 -> res=crowd36Handler.decode(circBuffer,waveData); //CROWD36
+				case 1, 3 -> res=xpaHandler.decode(circBuffer,waveData); //XPA1
+				case 2 -> res=xpa2Handler.decode(circBuffer,waveData); //XPA2
+				// case 4: res=	Experimental would go here
+				case 5 -> res=cis3650Handler.decode(circBuffer,waveData); //CIS36-50
+				case 6 -> res=fsk200500Handler.decode(circBuffer,waveData); // FSK200/500
+				case 7 -> res=ccir493Handler.decode(circBuffer,waveData); //CCIR493-4
+				case 8 -> res=fsk2001000Handler.decode(circBuffer,waveData); // FSK200/1000
+				case 9 -> res=gwHandler.decode(circBuffer,waveData); // GW
+				case 10 -> res=rttyHandler.decode(circBuffer,waveData); // RTTY
+				case 11 -> res=fskHandler.decode(circBuffer,waveData); // FSK (raw)
+			}
+
 			// Tell the user there has been an error and stop the WAV file from loading
-			if (res==false)	{
+			if (!res)	{
 				if (soundCardInput==false)	{
 					inputThread.stopReadingFile();
 					wavFileLoadOngoing=false;
@@ -418,7 +398,7 @@ public class Rivet {
 		DateFormat df=DateFormat.getTimeInstance();
 		// If we are logging in UTC time then set the time zone to that
 		// Other wise logs will be in local time
-		if (logInUTC==true) df.setTimeZone(TimeZone.getTimeZone("UTC"));
+		if (logInUTC) df.setTimeZone(TimeZone.getTimeZone("UTC"));
 		return df.format(now);
 	}
 	
@@ -522,9 +502,9 @@ public class Rivet {
 	// Change the sound source
 	public void setSoundCardInput(boolean s) {
 		// Try to close the audio device if it is already in operation
-		if (this.soundCardInput==true) inputThread.closeAudio();
+		if (this.soundCardInput) inputThread.closeAudio();
 		// If the soundcard is already running we need to close it
-		if (s==false)	{
+		if (!s)	{
 			this.soundCardInput=false;
 		}
 		else	{
@@ -551,36 +531,25 @@ public class Rivet {
 	
 	// Reset the decoder state
 	public void resetDecoderState()	{
-		// CROWD36
-		if (system==0) crowd36Handler.setState(0);
-		// XPA
-		else if ((system==1)||(system==3)) xpaHandler.setState(0);
-		// XPA2
-		else if (system==2)	xpa2Handler.setState(0);
-		// Experimental
-		//else if (system==4)	
-		// CIS36-50
-		else if (system==5)	cis3650Handler.setState(0);
-		// FSK200/500
-		else if (system==6)	fsk200500Handler.setState(0);
-		// CCIR493-4
-		else if (system==7)	ccir493Handler.setState(0);
-		// FSK200/1000
-		else if (system==8)	fsk2001000Handler.setState(0);
-		// GW
-		else if (system==9) gwHandler.setState(0);
-		// RTTY
-		else if (system==10) rttyHandler.setState(0);
-		// FSK (raw)
-		else if (system==11) fskHandler.setState(0);
-		// RDFT
-		//else if (system==12) rdftHandler.setState(0);
+		switch(system){
+			case 0 -> crowd36Handler.setState(0);// CROWD36
+			case 1, 3 -> xpaHandler.setState(0);// XPA1
+			case 2 -> xpa2Handler.setState(0); // XPA2
+			// case 4: Experimental would go here
+			case 5 -> cis3650Handler.setState(0); // CIS36-50
+			case 6 -> fsk200500Handler.setState(0); // FSK200/500
+			case 7 -> ccir493Handler.setState(0); // CCIR493-4
+			case 8 -> fsk2001000Handler.setState(0); // FSK200/1000
+			case 9 -> gwHandler.setState(0); // GW
+			case 10 -> rttyHandler.setState(0); // RTTY
+			case 11 -> fskHandler.setState(0); // FSK (raw)
+			// case 12: rdftHandler.setState(0); That is if there was any functional RDFT decoder
+		}
 	}
 	
 	// Gets all the text on the screen and returns it as a string
 	public String getAllText()	{
-		String all=display_view.getText();
-		return all;
+		return display_view.getText();
 	}
 	
 	// Allows the user to set the CROWD36 high sync tone number
@@ -613,7 +582,7 @@ public class Rivet {
 		 panel.setLayout(new GridLayout(2,1));
 		 // Shift
 		 JLabel labelShift=new JLabel("Shift : ");		
-		 final String SHIFTS[]={"75 Hz","200 Hz","250 Hz","400 Hz","500 Hz"};
+		 final String[] SHIFTS ={"75 Hz","200 Hz","250 Hz","400 Hz","500 Hz"};
 		 JComboBox<String> shiftList=new JComboBox <String>(SHIFTS);
 		 if (cis3650Handler.getShift()==75) shiftList.setSelectedIndex(0);
 		 else if (cis3650Handler.getShift()==200) shiftList.setSelectedIndex(1);
@@ -642,7 +611,7 @@ public class Rivet {
 		 panel.setLayout(new GridLayout(3,2));
 		 // Baud Rate
 		 JLabel labelBaud=new JLabel("Baud Rate : ");		
-		 final String BAUDRATES[]={"45.5 baud","50 baud","75 baud","100 baud","145 baud","150 baud","200 baud","300 baud","600 baud"};
+		 final String[] BAUDRATES ={"45.5 baud","50 baud","75 baud","100 baud","145 baud","150 baud","200 baud","300 baud","600 baud"};
 		 JComboBox<String> baudRateList=new JComboBox <String>(BAUDRATES);
 		 if (rttyHandler.getBaudRate()==45.45) baudRateList.setSelectedIndex(0);
 		 else if (rttyHandler.getBaudRate()==50) baudRateList.setSelectedIndex(1);
@@ -657,28 +626,31 @@ public class Rivet {
 		 panel.add(baudRateList);
 		 // Shift 
 		 JLabel labelShift=new JLabel("Shift : ");		
-		 final String SHIFTS[]={"75 Hz","150 Hz","170 Hz","200 Hz","250 Hz","300 Hz","400 Hz","425 Hz","450 Hz","500 Hz","600 Hz","625 Hz","800 Hz","850 Hz","1000 Hz"};
+		 final String[] SHIFTS ={"75 Hz","150 Hz","170 Hz","200 Hz","250 Hz","300 Hz","400 Hz","425 Hz","450 Hz","500 Hz","600 Hz","625 Hz","800 Hz","850 Hz","1000 Hz"};
 		 JComboBox <String> shiftList=new JComboBox <String>(SHIFTS);
-		 if (rttyHandler.getShift()==75) shiftList.setSelectedIndex(0);
-		 else if (rttyHandler.getShift()==150) shiftList.setSelectedIndex(1);
-		 else if (rttyHandler.getShift()==170) shiftList.setSelectedIndex(2); 
-		 else if (rttyHandler.getShift()==200) shiftList.setSelectedIndex(3); 
-		 else if (rttyHandler.getShift()==250) shiftList.setSelectedIndex(4);
-		 else if (rttyHandler.getShift()==300) shiftList.setSelectedIndex(5);
-		 else if (rttyHandler.getShift()==400) shiftList.setSelectedIndex(6); 
-		 else if (rttyHandler.getShift()==425) shiftList.setSelectedIndex(7); 
-		 else if (rttyHandler.getShift()==450) shiftList.setSelectedIndex(8); 
-		 else if (rttyHandler.getShift()==500) shiftList.setSelectedIndex(9); 
-		 else if (rttyHandler.getShift()==600) shiftList.setSelectedIndex(10); 
-		 else if (rttyHandler.getShift()==625) shiftList.setSelectedIndex(11); 
-		 else if (rttyHandler.getShift()==800) shiftList.setSelectedIndex(12); 
-		 else if (rttyHandler.getShift()==850) shiftList.setSelectedIndex(13); 
-		 else if (rttyHandler.getShift()==1000) shiftList.setSelectedIndex(14); 
+		 // Sets the List entry based on the current RTTY/FSK config
+		 switch(rttyHandler.getShift()){
+		 	case 75 -> shiftList.setSelectedIndex(0);
+		 	case 150 -> shiftList.setSelectedIndex(1);
+		 	case 170 -> shiftList.setSelectedIndex(2);
+		 	case 200 -> shiftList.setSelectedIndex(3);
+		 	case 250 -> shiftList.setSelectedIndex(4);
+		 	case 300 -> shiftList.setSelectedIndex(5);
+		 	case 400 -> shiftList.setSelectedIndex(6);
+		 	case 425 -> shiftList.setSelectedIndex(7);
+		 	case 450 -> shiftList.setSelectedIndex(8);
+		 	case 500 -> shiftList.setSelectedIndex(9);
+		 	case 600 -> shiftList.setSelectedIndex(10);
+		 	case 625 -> shiftList.setSelectedIndex(11);
+		 	case 800 -> shiftList.setSelectedIndex(12);
+		 	case 850 -> shiftList.setSelectedIndex(13);
+		 	case 1000 -> shiftList.setSelectedIndex(14);
+		 }
 		 panel.add(labelShift);
 		 panel.add(shiftList);
 		 // Stop Bits
 		 JLabel labelStop=new JLabel("Stop Bits (Baudot only) : ");
-		 final String STOPBITS[]={"1 Bit","1.5 Bits","2 Bits","2.5 Bits"};
+		 final String[] STOPBITS = {"1 Bit","1.5 Bits","2 Bits","2.5 Bits"};
 		 JComboBox <String> stopBitsList=new JComboBox <String>(STOPBITS);
 		 if (rttyHandler.getStopBits()==1.0) stopBitsList.setSelectedIndex(0);
 		 else if (rttyHandler.getStopBits()==1.5) stopBitsList.setSelectedIndex(1);
@@ -691,109 +663,60 @@ public class Rivet {
 		 // If the user has clicked on the OK option then change values in the RTTY object
 		 if (resp==JOptionPane.OK_OPTION)	{
 			// Baud Rate
-			if (baudRateList.getSelectedIndex()==0)	{
-				rttyHandler.setBaudRate(45.45);
-				fskHandler.setBaudRate(45.45);
-			}
-			if (baudRateList.getSelectedIndex()==1)	{
-				rttyHandler.setBaudRate(50);
-				fskHandler.setBaudRate(50);
-			}
-			if (baudRateList.getSelectedIndex()==2)	{
-				rttyHandler.setBaudRate(75);
-				fskHandler.setBaudRate(75);
-			}		
-			if (baudRateList.getSelectedIndex()==3)	{
-				rttyHandler.setBaudRate(100);
-				fskHandler.setBaudRate(100);
-			}
-			if (baudRateList.getSelectedIndex()==4)	{
-				rttyHandler.setBaudRate(145);
-				fskHandler.setBaudRate(145);
-			}
-			if (baudRateList.getSelectedIndex()==5)	{
-				rttyHandler.setBaudRate(150);
-				fskHandler.setBaudRate(150);
-			}
-			if (baudRateList.getSelectedIndex()==6)	{
-				rttyHandler.setBaudRate(200);
-				fskHandler.setBaudRate(200);
-			}
-			if (baudRateList.getSelectedIndex()==7)	{
-				rttyHandler.setBaudRate(300);
-				fskHandler.setBaudRate(300);
-			}
-			if (baudRateList.getSelectedIndex()==8)	{
-				rttyHandler.setBaudRate(600);
-				fskHandler.setBaudRate(600);
-			}
-			// Shift
-			if (shiftList.getSelectedIndex()==0)	{
-				rttyHandler.setShift(75);
-				fskHandler.setShift(75);
-			}			
-			if (shiftList.getSelectedIndex()==1)	{
-				rttyHandler.setShift(150);
-				fskHandler.setShift(150);
-			}			
-			if (shiftList.getSelectedIndex()==2)	{
-				rttyHandler.setShift(170);
-				fskHandler.setShift(170);
-			}
-			if (shiftList.getSelectedIndex()==3)	{
-				rttyHandler.setShift(200);
-				fskHandler.setShift(200);
-			}			
-			if (shiftList.getSelectedIndex()==4)	{
-				rttyHandler.setShift(250);
-				fskHandler.setShift(250);
-			}	
-			if (shiftList.getSelectedIndex()==5)	{
-				rttyHandler.setShift(300);
-				fskHandler.setShift(300);
-			}		
-			if (shiftList.getSelectedIndex()==6)	{
-				rttyHandler.setShift(400);
-				fskHandler.setShift(400);
-			}			
-			if (shiftList.getSelectedIndex()==7)	{
-				rttyHandler.setShift(425);
-				fskHandler.setShift(425);
-			}
-			if (shiftList.getSelectedIndex()==8)	{
-				rttyHandler.setShift(450);
-				fskHandler.setShift(450);
-			}
-			if (shiftList.getSelectedIndex()==9)	{
-				rttyHandler.setShift(500);
-				fskHandler.setShift(500);
-			}
-			if (shiftList.getSelectedIndex()==10)	{
-				rttyHandler.setShift(600);
-				fskHandler.setShift(600);
-			}
-			if (shiftList.getSelectedIndex()==11)	{
-				rttyHandler.setShift(625);
-				fskHandler.setShift(625);
-			}
-			if (shiftList.getSelectedIndex()==12)	{
-				rttyHandler.setShift(800);
-				fskHandler.setShift(800);
-			}
-			if (shiftList.getSelectedIndex()==13)	{
-				rttyHandler.setShift(850);
-				fskHandler.setShift(850);
-			}
-			if (shiftList.getSelectedIndex()==14)	{
-				rttyHandler.setShift(1000);
-				fskHandler.setShift(1000);
-			}
+			 switch (baudRateList.getSelectedIndex()){
+				 case 0 -> setRTTY_FSK_settings(2, 45.45);
+				 case 1 -> setRTTY_FSK_settings(2, 50);
+				 case 2 -> setRTTY_FSK_settings(2, 75);
+				 case 3 -> setRTTY_FSK_settings(2, 100);
+				 case 4 -> setRTTY_FSK_settings(2, 145);
+				 case 5 -> setRTTY_FSK_settings(2, 150);
+				 case 6 -> setRTTY_FSK_settings(2, 200);
+				 case 7 -> setRTTY_FSK_settings(2, 300);
+				 case 8 -> setRTTY_FSK_settings(2, 600);
+			 }
+			 // Shift
+			 switch (shiftList.getSelectedIndex()){
+			 	case 0 -> setRTTY_FSK_settings(1, 75);
+				 case 1 -> setRTTY_FSK_settings(1, 150);
+				 case 2 -> setRTTY_FSK_settings(1, 170);
+				 case 3 -> setRTTY_FSK_settings(1, 200);
+				 case 4 -> setRTTY_FSK_settings(1, 250);
+				 case 5 -> setRTTY_FSK_settings(1, 300);
+				 case 6 -> setRTTY_FSK_settings(1, 400);
+				 case 7 -> setRTTY_FSK_settings(1, 425);
+				 case 8 -> setRTTY_FSK_settings(1, 450);
+				 case 9 -> setRTTY_FSK_settings(1, 500);
+				 case 10 -> setRTTY_FSK_settings(1, 600);
+				 case 11 -> setRTTY_FSK_settings(1, 625);
+				 case 12 -> setRTTY_FSK_settings(1, 800);
+				 case 13 -> setRTTY_FSK_settings(1, 850);
+				 case 14 -> setRTTY_FSK_settings(1, 1000);
+			 }
 			// Stop Bits
-			if (stopBitsList.getSelectedIndex()==0) rttyHandler.setStopBits(1.0);
-			if (stopBitsList.getSelectedIndex()==1) rttyHandler.setStopBits(1.5);
-			if (stopBitsList.getSelectedIndex()==2) rttyHandler.setStopBits(2.0);
-			if (stopBitsList.getSelectedIndex()==3) rttyHandler.setStopBits(2.5);
+			 switch (stopBitsList.getSelectedIndex())
+				 {
+				 	case 0 -> rttyHandler.setStopBits(1.0);
+					 case 1 -> rttyHandler.setStopBits(1.5);
+					 case 2 -> rttyHandler.setStopBits(2.0);
+					 case 3 -> rttyHandler.setStopBits(2.5);
+				 }
 		}
+	}
+
+	public void setRTTY_FSK_settings(int whatToSet, double value){
+		switch (whatToSet) {
+			// 1 = Shift
+			case 1 -> {
+				rttyHandler.setShift((int) value);
+				fskHandler.setShift((int) value);
+			}
+			// 2 = Baud Rate
+			case 2 -> {
+				rttyHandler.setBaudRate(value);
+				fskHandler.setBaudRate(value);
+			}
+		}
+
 	}
 
 	public boolean isInvertSignal() {
@@ -816,13 +739,13 @@ public class Rivet {
 			xmlfile.write(line);
 			// Invert
 			line="<invert val='";
-			if (invertSignal==true) line=line+"TRUE";
+			if (invertSignal) line=line+"TRUE";
 			else line=line+"FALSE";
 			line=line+"'/>\n";
 			xmlfile.write(line);
 			// Debug mode
 			line="<debug val='";
-			if (debug==true) line=line+"TRUE";
+			if (debug) line=line+"TRUE";
 			else line=line+"FALSE";
 			line=line+"'/>\n";
 			xmlfile.write(line);
@@ -836,11 +759,11 @@ public class Rivet {
 			line="<soundcard_level val='"+Integer.toString(soundCardInputLevel)+"'/>\n";
 			xmlfile.write(line);
 			// Soundcard Input
-			if (soundCardInput==true) line="<soundcard_input val='1'/>\n";
+			if (soundCardInput) line="<soundcard_input val='1'/>\n";
 			else line="<soundcard_input val='0'/>\n";
 			xmlfile.write(line);
 			// View GW Free Channel Markers
-			if (viewGWChannelMarkers==true) line="<view_gw_markers val='1'/>\n";
+			if (viewGWChannelMarkers) line="<view_gw_markers val='1'/>\n";
 			else line="<view_gw_markers val='0'/>\n";
 			xmlfile.write(line);
 			// RTTY & FSK
@@ -857,11 +780,11 @@ public class Rivet {
 			line="<audioDevice val='"+inputThread.getMixerName()+"'/>\n";
 			xmlfile.write(line);
 			// Display bad packets
-			if (displayBadPackets==true) line="<display_bad_packets val='1'/>\n";
+			if (displayBadPackets) line="<display_bad_packets val='1'/>\n";
 			else line="<display_bad_packets val='0'/>\n";
 			xmlfile.write(line);
 			// Show UTC time
-			if (logInUTC==true) line="<UTC val='1'/>\n";
+			if (logInUTC) line="<UTC val='1'/>\n";
 			else line="<UTC val='0'/>\n";
 			xmlfile.write(line);
 			// CIS36-50 shift
@@ -876,7 +799,6 @@ public class Rivet {
 			} catch (Exception e) {
 				JOptionPane.showMessageDialog(null,"Error : Unable to create the file rivet_settings.xml\n"+e.toString(),"Rivet", JOptionPane.ERROR_MESSAGE);
 			}
-		return;
 	}
 	
 	// Read in the rivet_settings.xml file //
@@ -889,7 +811,12 @@ public class Rivet {
 			// Instantiate a DefaultHandler subclass to handle events
 			DefaultXMLFileHandler handler=new DefaultXMLFileHandler();
 			// Start the parser. It reads the file and calls methods of the handler.
-			parser.parse(new File(filename),handler);
+			try {
+				parser.parse(new File(filename), handler);
+			}
+			catch (java.io.FileNotFoundException e){
+				JOptionPane.showMessageDialog(null,"Error loading rivet_settings.xml - does it exist?","Rivet",JOptionPane.INFORMATION_MESSAGE);
+			}
 		}
 
 	
@@ -991,8 +918,7 @@ public class Rivet {
 	
 	// Change the invert setting
 	public void changeInvertSetting ()	{
-		if (invertSignal==true) invertSignal=false;
-		else invertSignal=true;
+		invertSignal = !invertSignal;
 	}
 	
 	// Set the soundcard input level in the input thread
@@ -1034,16 +960,16 @@ public class Rivet {
 	// Adds a line to the display
 	public void writeLine(String line,Color col,Font font) {
 		if (line!=null)	{
-			if (logging==true) fileWriteLine(line);
-			if (pauseDisplay==false) display_view.addLine(line,col,font);
+			if (logging) fileWriteLine(line);
+			if (!pauseDisplay) display_view.addLine(line,col,font);
 		}
 	}
 	
 	// Adds a single char to the current line on the display
 	public void writeChar (String ct,Color col,Font font)	{
 		if (ct!=null)	{
-			if (pauseDisplay==false) display_view.addChar(ct,col,font);
-			if (logging==true) fileWriteChar(ct);
+			if (!pauseDisplay) display_view.addChar(ct,col,font);
+			if (logging) fileWriteChar(ct);
 		}
 	}
 	
@@ -1054,8 +980,8 @@ public class Rivet {
 	
 	// Writes a new line to the screen
 	public void newLineWrite()	{
-		if (pauseDisplay==false) display_view.newLine();
-		if (logging==true) fileWriteNewline();
+		if (!pauseDisplay) display_view.newLine();
+		if (logging) fileWriteNewline();
 	}
 
 	public List<Trigger> getListTriggers() {
@@ -1068,7 +994,7 @@ public class Rivet {
 		activeTriggerCount=0;
 		int a;
 		for (a=0;a<listTriggers.size();a++)	{
-			if (listTriggers.get(a).isActive()==true) activeTriggerCount++;
+			if (listTriggers.get(a).isActive()) activeTriggerCount++;
 		}
 	}
 	

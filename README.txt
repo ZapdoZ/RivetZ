@@ -164,7 +164,14 @@ Build 89 Improve the decoded CROWD36 display and add a debug output
          Add 150 baud support for RTTY and raw FSK
 Build 90 Rewrite the FSK200/1000 block parser to use the newest findings
          Fix the XPA2 decoder being unreliable after a while
-                
+
+RivetZ Changelog
+
+Build 90 Various code improvements in Rivet.java
+         UTC now default Time Zone
+         Shows info if the settings xml doesn't exist
+
+
 Reported Bugs
 -------------
 Still problems with ..
@@ -172,4 +179,4 @@ Still problems with ..
 CWOWD36 - Lack a fundamental understanding of this mode. Suspect a unknown tone to alphabet map is in use.
 
 CIS36-50 - Messages are OK from stations that start transmitting idle briefly but Rivet has problems with 
-messages from stations which idle constantly.
+messages from stations which idle constantly.

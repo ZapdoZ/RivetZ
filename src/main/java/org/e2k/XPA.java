@@ -44,7 +44,7 @@ public class XPA extends MFSK {
 		return baudRate;
 	}
 
-	// Chage the state and update the status label
+	// Change the state and update the status label
 	public void setState(int state) {
 		this.state=state;
 		// Change the status label
