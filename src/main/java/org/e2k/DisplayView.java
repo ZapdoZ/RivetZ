@@ -106,6 +106,16 @@ public class DisplayView extends JComponent implements Observer {
 		}
 		return buffer.toString();
 	}
+	// Gets current line from Display
+	public String getcurrentLine(){
+		return displayString[displayCounter-1];
+	}
+
+	// Deletes the current line from the Display
+	public void deletecurrentLine(){
+		displayString[displayCounter-1]="";
+		displayCounter = displayCounter-2; //Does kinda weird stuff but seems ok so far
+	}
 	
 	// Adds a single character to the current line
 	public void addChar (String ch,Color col,Font font)	{

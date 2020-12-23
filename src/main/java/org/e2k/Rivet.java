@@ -972,6 +972,15 @@ public class Rivet {
 			if (logging) fileWriteChar(ct);
 		}
 	}
+
+	public String getcurrentLine(){
+		return display_view.getcurrentLine();
+	}
+
+	// Deletes the current line from the Display
+	public void deletecurrentLine(){
+		display_view.deletecurrentLine();
+	}
 	
 	// Clear the display screen
 	public void clearScreen()	{

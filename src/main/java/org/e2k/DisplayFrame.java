@@ -35,7 +35,7 @@ public class DisplayFrame extends JFrame implements ActionListener {
 	private JMenu triggersMenu=new JMenu("Triggers");
 	private JMenuItem exit_item,wavLoad_item,save_to_file,about_item,help_item,debug_item,soundcard_item,reset_item,copy_item,bitstream_item;
 	private JMenuItem XPA_10_item,XPA_20_item,XPA2_item,CROWD36_item,experimental_item,CIS3650_item,FSK200500_item,CCIR493_item,GW_item,RTTY_item;
-	private JMenuItem FSK2001000_item,CROWD36_sync_item,invert_item,save_settings_item,sample_item,e2k_item,twitter_item;
+	private JMenuItem FSK2001000_item,CROWD36_sync_item, xpa_linebuffer_item ,invert_item,save_settings_item,sample_item,e2k_item,twitter_item;
 	private JMenuItem freeChannelMarkerGW_item,RTTYOptions_item,FSK_item,AddEditTrigger_item,credits_item,system_info_item;
 	private JMenuItem ClearDisplay_item,DisplayBad_item,DisplayUTC_item,UDXF_item,CIS360Options_item;
 	private List<JMenuItem> trigger_items=new ArrayList<JMenuItem>();
@@ -136,6 +136,8 @@ public class DisplayFrame extends JFrame implements ActionListener {
 		invert_item.addActionListener(this);
 		optionsMenu.add(CROWD36_sync_item=new JMenuItem("Set the CROWD36 Sync High Tone"));
 		CROWD36_sync_item.addActionListener(this);
+		optionsMenu.add(xpa_linebuffer_item=new JRadioButtonMenuItem("Use smooth XPA message decoding", theApp.xpaHandler.getUselinebuffer()));
+		xpa_linebuffer_item.addActionListener(this);
 		menuBar.add(optionsMenu);
 		// Triggers
 		updateTriggerMenuItems();
@@ -272,8 +274,7 @@ public class DisplayFrame extends JFrame implements ActionListener {
 		}
 		// Debug mode
 		if (event_name=="Debug Mode")	{
-			if (theApp.isDebug()==true) theApp.setDebug(false);
-			else theApp.setDebug(true);
+			theApp.setDebug(!theApp.isDebug());
 		}
 		// Run through all the mode names
 		for (int a=0;a<theApp.MODENAMES.length;a++)	{
@@ -316,8 +317,7 @@ public class DisplayFrame extends JFrame implements ActionListener {
 		
 		// Soundcard Input
 		if (event_name=="Soundcard Input")	{
-			if (theApp.isSoundCardInput()==true) theApp.setSoundCardInput(false);
-			else theApp.setSoundCardInput(true);
+			theApp.setSoundCardInput(!theApp.isSoundCardInput());
 		}
 		// Reset the decoder state
 		if (event_name=="Reset Decoding State")	{
@@ -337,12 +337,14 @@ public class DisplayFrame extends JFrame implements ActionListener {
 		}
 		// Invert the input signal
 		if (event_name=="Invert")	{
-			if (theApp.isInvertSignal()==true) theApp.setInvertSignal(false);
-			else theApp.setInvertSignal(true);
+			theApp.changeInvertSetting();
 		}
 		// Save Settings
 		if (event_name=="Save the Current Settings")	{
 			theApp.saveSettings();
+		}
+		if (event_name.equals("Use smooth XPA message decoding")){
+			theApp.xpaHandler.setUselinebuffer(!theApp.xpaHandler.getUselinebuffer());
 		}
 		// System Information
 		if (event_name=="System Information")	{
@@ -354,23 +356,20 @@ public class DisplayFrame extends JFrame implements ActionListener {
 		}
 		// Display possible bad data
 		if (event_name=="Display Possible Bad Data")	{
-			if (theApp.isDisplayBadPackets()==true) theApp.setDisplayBadPackets(false);
-			else theApp.setDisplayBadPackets(true);
+			theApp.setDisplayBadPackets(!theApp.isDisplayBadPackets());
 		}
 		// View GW Free Channel Markers
 		if (event_name=="View GW Free Channel Markers")	{
-			if (theApp.isViewGWChannelMarkers()==true) theApp.setViewGWChannelMarkers(false);
-			else theApp.setViewGWChannelMarkers(true);
+			theApp.setViewGWChannelMarkers(!theApp.isViewGWChannelMarkers());
 		}
 		// Show UTC Time
 		if (event_name=="Display UTC Time")	{
-			if (theApp.isLogInUTC()==true) theApp.setLogInUTC(false);
-			else theApp.setLogInUTC(true);
+			theApp.setLogInUTC(!theApp.isLogInUTC());
 		}
 		// Exit 
 		if (event_name=="Exit") {
 			// If logging then close the log file
-			if (theApp.getLogging()==true) closeLogFile();
+			if (theApp.getLogging()) closeLogFile();
 			// Stop the program //
 			System.exit(0);	
 		}
@@ -428,6 +427,7 @@ public class DisplayFrame extends JFrame implements ActionListener {
 		DisplayBad_item.setSelected(theApp.isDisplayBadPackets());
 		DisplayUTC_item.setSelected(theApp.isLogInUTC());
 		RTTY_item.setSelected(theApp.isRTTY());
+		xpa_linebuffer_item.setSelected(theApp.xpaHandler.getUselinebuffer());
 		// Triggers
 		List<Trigger> trigList=theApp.getListTriggers();
 		int a;

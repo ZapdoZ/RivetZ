@@ -17,7 +17,7 @@ import java.awt.Color;
 import javax.swing.JOptionPane;
 
 public class XPA extends MFSK {
-	
+
 	private int baudRate=10;
 	private int state=0;
 	private double samplesPerSymbol;
@@ -26,19 +26,28 @@ public class XPA extends MFSK {
 	private long symbolCounter=0;
 	private String previousCharacter;
 	private int groupCount=0;
+	private int DividingGroupCount = 0;
+	private boolean messageStarted = false;
 	private StringBuilder lineBuffer=new StringBuilder();
 	private CircularDataBuffer energyBuffer=new CircularDataBuffer();
 	private long syncFoundPoint;
 	private int correctionFactor;
-	
+	private boolean uselinebuffer = true;
+
 	public XPA (Rivet tapp,int baud)	{
 		baudRate=baud;
 		theApp=tapp;
 	}
-	
+
 	public void setBaudRate(int baudRate) {
 		this.baudRate = baudRate;
 	}
+
+	public void setUselinebuffer(boolean lb){
+		this.uselinebuffer = lb;
+	}
+
+	public boolean getUselinebuffer(){return uselinebuffer;}
 
 	public int getBaudRate() {
 		return baudRate;
@@ -58,7 +67,7 @@ public class XPA extends MFSK {
 	public int getState() {
 		return state;
 	}
-	
+
 	// The main decode routine
 	public boolean decode (CircularDataBuffer circBuf,WaveData waveData)	{
 		// Just starting
@@ -137,7 +146,7 @@ public class XPA extends MFSK {
 			theApp.writeLine((theApp.getTimeStamp()+" High sync tone found"),Color.BLACK,theApp.italicFont);
 			return true;
 		}
-		
+
 		// Set the symbol timing
 		if (state==3)	{
 			do8FFT (circBuf,waveData,0);
@@ -154,23 +163,23 @@ public class XPA extends MFSK {
 			theApp.writeLine((theApp.getTimeStamp()+" Symbol timing found"),Color.BLACK,theApp.italicFont);
 			return true;
 		}
-		
+
 		// Get valid data
 		if (state==4)	{
 			// Only do this at the start of each symbol
 			if (symbolCounter>=(long)samplesPerSymbol)	{
-				symbolCounter=0;				
+				symbolCounter=0;
 				int freq=symbolFreq(circBuf,waveData,0,samplesPerSymbol);
 				freq=freq+correctionFactor;
 				displayMessage(freq,waveData.isFromFile());
 			}
 		}
-		
+
 		sampleCount++;
 		symbolCounter++;
 		return true;
 	}
-	
+
 	// Hunt for an XPA start tone
 	private String startToneHunt (CircularDataBuffer circBuf,WaveData waveData)	{
 		String line;
@@ -202,7 +211,7 @@ public class XPA extends MFSK {
 	    line=theApp.getTimeStamp()+" XPA Start Tones Found (correcting by "+Integer.toString(correctionFactor)+" Hz)";
 	    return line;
 	}
-	
+
 	// Return a String for a tone
 	private String getChar (int tone,String prevChar)	{
 	    final int errorAllowance=20;
@@ -228,109 +237,241 @@ public class XPA extends MFSK {
 	    else if ((tone>=(1280-errorAllowance))&&(tone<(1280+errorAllowance))) return ("Start High");
 	    else return ("UNID");
 	  }
-	
-	private void displayMessage (int freq,boolean isFile)	{
-		String tChar=getChar(freq,previousCharacter);
-		int tlength=0,llength=0;
+
+	private void displayMessage (int freq,boolean isFile) {
+		String tChar = getChar(freq, previousCharacter);
+		int tlength = 0, llength = 0;
 		// If we get two End Tones in a row then stop decoding
-		if ((tChar=="R")&&(previousCharacter=="End Tone")) {
-			theApp.writeLine((theApp.getTimeStamp()+" XPA Decode Complete"),Color.BLACK,theApp.italicFont);
-			lineBuffer.delete(0,lineBuffer.length());
-			// If this is a file don't keep trying to decode
-			// Also stop reading from the file
-			if (isFile==true) setState(5);
-			else setState(0);
-			return;
-		}
-		if (tChar=="R") tChar=previousCharacter;
-		
-		if ((tChar=="Message Start")&&(previousCharacter=="Message Start"))	{
-			previousCharacter=tChar;
-			return;
-		}
-		
-		if ((tChar==" ")&&(previousCharacter==" "))	{
-			previousCharacter=tChar;
-			return;
-		}
-		
-		// Don't add a space at the start of a line
-		if ((tChar==" ")&&(lineBuffer.length()==0))	{
-			previousCharacter=tChar;
-			return;
-		}
-		
-		if ((tChar!="Sync High")&&(tChar!="Sync Low")&&(tChar!="Start High")&&(tChar!="Start Low"))	{
-			tlength=tChar.length();
-			lineBuffer.append(tChar);
-			llength=lineBuffer.length();
-		}
-	
-		previousCharacter=tChar;
-			
-		// Write to a new line after a Message Start
-		if (tChar=="Message Start")	{
-			groupCount=0;
-			lineBuffer.delete((llength-tlength),llength);
-			theApp.writeLine((lineBuffer.toString()),Color.BLACK,theApp.boldFont);
-			theApp.writeLine("Message Start",Color.BLACK,theApp.boldFont);
-        	lineBuffer.delete(0,lineBuffer.length());
-        	return;
+		if (uselinebuffer) {
+			if ((tChar == "R") && (previousCharacter == "End Tone")) {
+				theApp.writeLine((theApp.getTimeStamp() + " XPA Decode Complete"), Color.BLACK, theApp.italicFont);
+				lineBuffer.delete(0, lineBuffer.length());
+				DividingGroupCount = 0;
+				messageStarted = false;
+				// If this is a file don't keep trying to decode
+				// Also stop reading from the file
+				if (isFile) setState(5);
+				else setState(0);
+				return;
 			}
-		// Write to a new line after an End Tone
-		if (tChar=="End Tone")	{
-        	groupCount=0;
-			lineBuffer.delete((llength-tlength),llength);
-			theApp.writeLine((lineBuffer.toString()),Color.BLACK,theApp.boldFont);
-        	lineBuffer.delete(0,lineBuffer.length());
-        	// All done look for another message
-        	setState(1);
-        	return;
+			if (tChar == "R") tChar = previousCharacter;
+
+
+			if ((tChar == "Message Start") && (previousCharacter == "Message Start")) {
+				previousCharacter = tChar;
+				return;
 			}
-		// Hunt for 666662266262
-		final String blockSync="6666622662626";
-        if (lineBuffer.indexOf(blockSync)!=-1)	{
-        	groupCount=0;
-        	tlength=blockSync.length();
-			lineBuffer.delete((llength-tlength),llength);
-			if (lineBuffer.length()>0) theApp.writeLine((lineBuffer.toString()),Color.BLACK,theApp.boldFont);
-			theApp.writeLine("Block Sync",Color.BLACK,theApp.boldFont);
-        	lineBuffer.delete(0,lineBuffer.length());
-        	return;
-        	}
-        // Hunt for 4444444444
-        final String sbreak="4444444444";
-        if (lineBuffer.indexOf(sbreak)!=-1)	{
-        	groupCount=0;
-        	tlength=sbreak.length();
-			lineBuffer.delete((llength-tlength),llength);
-			if (lineBuffer.length()>0) theApp.writeLine((lineBuffer.toString()),Color.BLACK,theApp.boldFont);
-			theApp.writeLine(sbreak,Color.BLACK,theApp.boldFont);
-        	lineBuffer.delete(0,lineBuffer.length());
-        	return;
-        	}
-        // Hunt for UNID
-        if (lineBuffer.indexOf("UNID")!=-1)	{
-        	groupCount=0;
-			lineBuffer.delete((llength-tlength),llength);
-			theApp.writeLine((lineBuffer.toString()),Color.BLACK,theApp.boldFont);
-			theApp.writeLine(("UNID "+freq+" Hz"),Color.BLACK,theApp.boldFont);
-        	lineBuffer.delete(0,lineBuffer.length());
-        	return;
-        	}
-        // Count the group spaces
-        if (tChar==" ") groupCount++;
-        // After 15 group spaces add a line break
-        if (groupCount==15)	{
-        	groupCount=0;
-        	theApp.writeLine((lineBuffer.toString()),Color.BLACK,theApp.boldFont);
-         	lineBuffer.delete(0,lineBuffer.length());
-        	return;
-        	}
-		return;
+
+			if ((tChar == " ") && (previousCharacter == " ")) {
+				previousCharacter = tChar;
+				return;
+			}
+			if ((previousCharacter == "Message Start") && (tChar == " ")){
+				previousCharacter = tChar;
+				return;
+			}
+
+			if ((messageStarted) && ((DividingGroupCount>=0 && DividingGroupCount<64))){
+				if (tChar.equals("End Tone")){
+					previousCharacter = tChar;
+					return;
+				}
+				theApp.writeChar(tChar, Color.BLACK, theApp.boldFont);
+				if (tChar.equals(" ")){
+					groupCount++;
+					DividingGroupCount++;
+				}
+				if (groupCount == 15){
+					groupCount = 0;
+					theApp.newLineWrite();}
+				previousCharacter = tChar;
+
+				return;
+			}
+
+			// Don't add a space at the start of a line
+			if ((tChar == " ") && (lineBuffer.length() == 0)) {
+				previousCharacter = tChar;
+				return;
+			}
+
+
+			if ((tChar != "Sync High") && (tChar != "Sync Low") && (tChar != "Start High") && (tChar != "Start Low")) {
+				tlength = tChar.length();
+				lineBuffer.append(tChar);
+				llength = lineBuffer.length();
+			}
+
+			previousCharacter = tChar;
+
+			// Write to a new line after a Message Start
+			if (tChar == "Message Start") {
+				groupCount = 0;
+				lineBuffer.delete((llength - tlength), llength);
+				theApp.writeLine((lineBuffer.toString()), Color.BLACK, theApp.boldFont);
+				theApp.writeLine("Message Start", Color.BLACK, theApp.boldFont);
+				lineBuffer.delete(0, lineBuffer.length());
+				messageStarted = true;
+				theApp.newLineWrite();
+				return;
+			}
+			// Write to a new line after an End Tone
+			if (tChar == "End Tone") {
+				groupCount = 0;
+				lineBuffer.delete((llength - tlength), llength);
+				theApp.writeLine((lineBuffer.toString()), Color.BLACK, theApp.boldFont);
+				lineBuffer.delete(0, lineBuffer.length());
+				// All done look for another message
+				setState(1);
+				return;
+			}
+			// Hunt for 666662266262
+			final String blockSync = "6666622662626";
+			if (lineBuffer.indexOf(blockSync) != -1) {
+				groupCount = 0;
+				tlength = blockSync.length();
+				lineBuffer.delete((llength - tlength), llength);
+				if (lineBuffer.length() > 0) theApp.writeLine((lineBuffer.toString()), Color.BLACK, theApp.boldFont);
+				theApp.writeLine("Block Sync", Color.BLACK, theApp.boldFont);
+				lineBuffer.delete(0, lineBuffer.length());
+				DividingGroupCount = 0;
+				if(messageStarted) {
+					theApp.newLineWrite();
+				}
+				return;
+			}
+			// Hunt for 4444444444
+			final String sbreak = "4444444444";
+			if (lineBuffer.indexOf(sbreak) != -1) {
+				groupCount = 0;
+				tlength = sbreak.length();
+				lineBuffer.delete((llength - tlength), llength);
+				if (lineBuffer.length() > 0) theApp.writeLine((lineBuffer.toString()), Color.BLACK, theApp.boldFont);
+				theApp.writeLine("Break", Color.BLACK, theApp.boldFont);
+				lineBuffer.delete(0, lineBuffer.length());
+				return;
+			}
+			// Hunt for UNID
+			if (lineBuffer.indexOf("UNID") != -1) {
+				groupCount = 0;
+				lineBuffer.delete((llength - tlength), llength);
+				theApp.writeLine((lineBuffer.toString()), Color.BLACK, theApp.boldFont);
+				theApp.writeLine(("UNID " + freq + " Hz"), Color.BLACK, theApp.boldFont);
+				lineBuffer.delete(0, lineBuffer.length());
+				return;
+			}
+			// Count the group spaces
+			if (tChar == " ") groupCount++;
+			// After 15 group spaces add a line break
+			if (groupCount == 15) {
+				groupCount = 0;
+				theApp.writeLine((lineBuffer.toString()), Color.BLACK, theApp.boldFont);
+				lineBuffer.delete(0, lineBuffer.length());
+				return;
+			}
+		}
+		else {
+			if ((tChar.equals("R")) && (previousCharacter == "End Tone")) {
+				theApp.writeLine((theApp.getTimeStamp() + " XPA Decode Complete"), Color.BLACK, theApp.italicFont);
+				lineBuffer.delete(0, lineBuffer.length());
+				// If this is a file don't keep trying to decode
+				// Also stop reading from the file
+				if (isFile) setState(5);
+				else setState(0);
+				return;
+			}
+			if (tChar.equals("R")) tChar = previousCharacter;
+
+			if ((tChar.equals("Message Start")) && (previousCharacter == "Message Start")) {
+				previousCharacter = tChar;
+				return;
+			}
+
+			if ((tChar.equals(" ")) && (previousCharacter == " ")) {
+				previousCharacter = tChar;
+				return;
+			}
+
+			// Don't add a space at the start of a line
+			if ((tChar.equals(" ")) && (lineBuffer.length() == 0)) {
+				previousCharacter = tChar;
+				return;
+			}
+
+			if ((!tChar.equals("Sync High")) && (!tChar.equals("Sync Low")) && (!tChar.equals("Start High")) && (!tChar.equals("Start Low"))) {
+				tlength = tChar.length();
+				lineBuffer.append(tChar);
+				llength = lineBuffer.length();
+			}
+
+			previousCharacter = tChar;
+
+			// Write to a new line after a Message Start
+			if (tChar.equals("Message Start")) {
+				groupCount = 0;
+				lineBuffer.delete((llength - tlength), llength);
+				theApp.writeLine((lineBuffer.toString()), Color.BLACK, theApp.boldFont);
+				theApp.writeLine("Message Start", Color.BLACK, theApp.boldFont);
+				lineBuffer.delete(0, lineBuffer.length());
+				return;
+			}
+			// Write to a new line after an End Tone
+			if (tChar.equals("End Tone")) {
+				theApp.newLineWrite();
+				groupCount = 0;
+				lineBuffer.delete((llength - tlength), llength);
+				theApp.writeLine((lineBuffer.toString()), Color.BLACK, theApp.boldFont);
+				lineBuffer.delete(0, lineBuffer.length());
+				// All done look for another message
+				setState(1);
+				return;
+			}
+			// Hunt for 666662266262
+			final String blockSync = "6666622662626";
+			if (lineBuffer.indexOf(blockSync) != -1) {
+				groupCount = 0;
+				tlength = blockSync.length();
+				lineBuffer.delete((llength - tlength), llength);
+				if (lineBuffer.length() > 0) theApp.writeLine((lineBuffer.toString()), Color.BLACK, theApp.boldFont);
+				theApp.writeLine("Block Sync", Color.BLACK, theApp.boldFont);
+				lineBuffer.delete(0, lineBuffer.length());
+				return;
+			}
+			// Hunt for 4444444444
+			final String sbreak = "4444444444";
+			if (lineBuffer.indexOf(sbreak) != -1) {
+				groupCount = 0;
+				tlength = sbreak.length();
+				lineBuffer.delete((llength - tlength), llength);
+				if (lineBuffer.length() > 0) theApp.writeLine((lineBuffer.toString()), Color.BLACK, theApp.boldFont);
+				theApp.writeLine(sbreak, Color.BLACK, theApp.boldFont);
+				lineBuffer.delete(0, lineBuffer.length());
+				return;
+			}
+			// Hunt for UNID
+			if (lineBuffer.indexOf("UNID") != -1) {
+				groupCount = 0;
+				lineBuffer.delete((llength - tlength), llength);
+				theApp.writeLine((lineBuffer.toString()), Color.BLACK, theApp.boldFont);
+				theApp.writeLine(("UNID " + freq + " Hz"), Color.BLACK, theApp.boldFont);
+				lineBuffer.delete(0, lineBuffer.length());
+				return;
+			}
+			// Count the group spaces
+			if (tChar.equals(" ")) groupCount++;
+			// After 15 group spaces add a line break
+			if (groupCount == 15) {
+				groupCount = 0;
+				theApp.writeLine((lineBuffer.toString()), Color.BLACK, theApp.boldFont);
+				lineBuffer.delete(0, lineBuffer.length());
+				return;
+			}
+
+
+			return;
+		}
 	}
-	
-	
-	
+
+
 
 }

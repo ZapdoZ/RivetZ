@@ -477,10 +477,9 @@ public class FSK extends FFT {
 		return vals;
 		}	
 	
-	// Test for a specific tone
+	// Test for a specific tone. Returns true if tone is in specified range
 	public boolean toneTest (int freq,int tone,int errorAllow)	{
-		if ((freq>(tone-errorAllow))&&(freq<(tone+errorAllow))) return true;
-		else return false;
+		return (freq > (tone - errorAllow)) && (freq < (tone + errorAllow));
 		}
 	
 	// Given a frequency decide the bit value
