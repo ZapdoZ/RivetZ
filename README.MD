@@ -3,7 +3,7 @@
 For the old readme, please see oldreadme.txt
 ## System requirements  
 - For live decoding: an audio passthrough, such as [VB Audio Cable](https://vb-audio.com/Cable/) or [VoiceMeeter](https://vb-audio.com/Voicemeeter/)
-- [Java **15**](https://www.oracle.com/de/java/technologies/javase-jdk15-downloads.html)
+- For the Jar: [Java **15**](https://www.oracle.com/de/java/technologies/javase-jdk15-downloads.html) (Releases will include a (hopefully working) win64 bundle)
 ## Supported modes
 - Baudot (various speeds)
 - CCIR493-5
@@ -24,3 +24,5 @@ For the old readme, please see oldreadme.txt
 - Various code improvements in Rivet.java 
 - UTC now default time zone
 - Shows info on startup if the settings xml doesn't exist
+### Build 90.1
+- New "Smooth XPA message decoding" option (Displays numbers in the main part live instead of using a line buffer). Looks better
