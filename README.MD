@@ -15,6 +15,7 @@ For the old readme, please see oldreadme.txt
 - GW FSK
 - XPA1 (10/20 Baud)
 - XPA2
+- XPB (Beta)
 ## Libraries used
 - [JTransforms](http://sites.google.com/site/piotrwendykier/software/jtransforms)
 ## Changelog
@@ -26,3 +27,5 @@ For the old readme, please see oldreadme.txt
 - Shows info on startup if the settings xml doesn't exist
 ### Build 90.1
 - New "Smooth XPA message decoding" option (Displays numbers in the main part live instead of using a line buffer). Looks better
+### Build 91
+- Added XPB Support (Beta)
