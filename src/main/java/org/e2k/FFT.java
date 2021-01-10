@@ -112,8 +112,7 @@ public class FFT extends Core {
 	
 	// Show what percentage of the total the highest spectral value is
 	public double getPercentageOfTotal()	{
-			double p=(highestValue/totalEnergy)*100.0;
-			return p;
+		return (highestValue/totalEnergy)*100.0;
 	}
 	
 	public int getFreqBin ()	{

@@ -108,7 +108,7 @@ public class DisplayView extends JComponent implements Observer {
 	}
 	// Gets current line from Display
 	public String getcurrentLine(){
-		return displayString[displayCounter-1];
+		return displayString[displayCounter];
 	}
 
 	// Deletes the current line from the Display

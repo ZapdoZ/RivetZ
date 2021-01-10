@@ -19,6 +19,7 @@ public class MFSK extends FSK {
 		
 	public final int FFT_8_SIZE=8;
 	public final int FFT_64_SIZE=64;
+	public final int FFT_100_SIZE=100;
 	public final int FFT_128_SIZE=128;
 	public final int FFT_200_SIZE=200;
 	public final int FFT_256_SIZE=256;
@@ -31,6 +32,7 @@ public class MFSK extends FSK {
 	private DoubleFFT_1D fft8=new DoubleFFT_1D(FFT_8_SIZE);
 	private DoubleFFT_1D fft128=new DoubleFFT_1D(FFT_128_SIZE);
 	private DoubleFFT_1D fft64=new DoubleFFT_1D(FFT_64_SIZE);
+	private DoubleFFT_1D fft100 = new DoubleFFT_1D(FFT_100_SIZE);
 		
 	// We have a problem since FFT sizes must be to a power of 2 but samples per symbol can be any value
 	// So instead I am doing a FFT in the middle of the symbol
@@ -160,6 +162,20 @@ public class MFSK extends FSK {
 	    fft1024.realForward(datar);
 		double spec[]=getSpectrum(datar);
 		int freq=getFFTFreq (spec,waveData.getSampleRate());  
+		return freq;
+	}
+	public int doXPBFFT(CircularDataBuffer circBuf, WaveData waveData, int start){
+		// should be ran at the end of each symbol
+		double datao[]=circBuf.extractDataDouble(start,FFT_100_SIZE);
+		double datar[]=new double[FFT_100_SIZE];
+		// Run this through a Blackman filter
+		int a;
+		for (a=0;a<datar.length;a++)	{
+			datar[a]=windowBlackman(datao[a],a,datao.length);
+		}
+		fft100.realForward(datar);
+		double spec[]=getSpectrum(datar);
+		int freq=getFFTFreq (spec,waveData.getSampleRate());
 		return freq;
 	}
 	

@@ -48,7 +48,7 @@ public class Rivet {
 	private DisplayView display_view;
 	private static Rivet theApp;
 	private static DisplayFrame window;
-	public final String program_version="RivetZ (Build 90.1)";
+	public final String program_version="RivetZ (Build 91)";
 	public int vertical_scrollbar_value=0;
 	public int horizontal_scrollbar_value=0;
 	public boolean pReady=false;
@@ -57,7 +57,8 @@ public class Rivet {
 	public final Font boldFont=new Font("SanSerif",Font.BOLD,12);
 	public final Font italicFont=new Font("SanSerif",Font.ITALIC,12);
     public XPA xpaHandler=new XPA(this,10);	
-    public XPA2 xpa2Handler=new XPA2(this);	
+    public XPA2 xpa2Handler=new XPA2(this);
+    public XPB xpbHandler=new XPB(this, 65.79);
     public CROWD36 crowd36Handler=new CROWD36(this,40);	
     public FSK200500 fsk200500Handler=new FSK200500(this,200);
     public FSK2001000 fsk2001000Handler=new FSK2001000(this,200);
@@ -108,7 +109,8 @@ public class Rivet {
 			"FSK200/1000",
 			"GW FSK (100 Baud)",
 			"Baudot",
-			"FSK (Raw)"
+			"FSK (Raw)",
+			"XPB"
 			};
     
 	public static void main(String[] args) {
@@ -238,6 +240,10 @@ public class Rivet {
 	public boolean isFSK()	{
 		return system == 11;
 	}
+
+	public boolean isXPB(){
+		return system==12;
+	}
 		
 	// Tell the input thread to start to load a .WAV file
 	public void loadWAVfile(String fileName)	{
@@ -272,6 +278,8 @@ public class Rivet {
 		else if (system==10) rttyHandler.setState(0);
 		// FSK (raw)
 		else if (system==11) fskHandler.setState(0);
+		//XPB
+		else if (system==12) xpbHandler.setState(0);
 		// Ensure the program knows we have a WAV file load ongoing
 		wavFileLoadOngoing=true;
 	}
@@ -358,6 +366,7 @@ public class Rivet {
 				case 9 -> res=gwHandler.decode(circBuffer,waveData); // GW
 				case 10 -> res=rttyHandler.decode(circBuffer,waveData); // RTTY
 				case 11 -> res=fskHandler.decode(circBuffer,waveData); // FSK (raw)
+				case 12 -> res=xpbHandler.decode(circBuffer, waveData); //XPB
 			}
 
 			// Tell the user there has been an error and stop the WAV file from loading
@@ -543,7 +552,7 @@ public class Rivet {
 			case 9 -> gwHandler.setState(0); // GW
 			case 10 -> rttyHandler.setState(0); // RTTY
 			case 11 -> fskHandler.setState(0); // FSK (raw)
-			// case 12: rdftHandler.setState(0); That is if there was any functional RDFT decoder
+			case 12 -> xpbHandler.setState(0); //XPB
 		}
 	}
 	

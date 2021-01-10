@@ -34,7 +34,7 @@ public class DisplayFrame extends JFrame implements ActionListener {
 	public JScrollBar vscrollbar=new JScrollBar(JScrollBar.VERTICAL,0,1,0,6000);
 	private JMenu triggersMenu=new JMenu("Triggers");
 	private JMenuItem exit_item,wavLoad_item,save_to_file,about_item,help_item,debug_item,soundcard_item,reset_item,copy_item,bitstream_item;
-	private JMenuItem XPA_10_item,XPA_20_item,XPA2_item,CROWD36_item,experimental_item,CIS3650_item,FSK200500_item,CCIR493_item,GW_item,RTTY_item;
+	private JMenuItem XPA_10_item,XPA_20_item,XPA2_item, XPB_item, CROWD36_item,experimental_item,CIS3650_item,FSK200500_item,CCIR493_item,GW_item,RTTY_item;
 	private JMenuItem FSK2001000_item,CROWD36_sync_item, xpa_linebuffer_item ,invert_item,save_settings_item,sample_item,e2k_item,twitter_item;
 	private JMenuItem freeChannelMarkerGW_item,RTTYOptions_item,FSK_item,AddEditTrigger_item,credits_item,system_info_item;
 	private JMenuItem ClearDisplay_item,DisplayBad_item,DisplayUTC_item,UDXF_item,CIS360Options_item;
@@ -120,6 +120,8 @@ public class DisplayFrame extends JFrame implements ActionListener {
 		XPA_20_item.addActionListener(this);
 		modeMenu.add(XPA2_item=new JRadioButtonMenuItem(theApp.MODENAMES[2],theApp.isXPA2()));
 		XPA2_item.addActionListener(this);
+		modeMenu.add(XPB_item=new JRadioButtonMenuItem(theApp.MODENAMES[12], theApp.isXPB()));
+		XPB_item.addActionListener(this);
 		modeMenu.addSeparator();
 		modeMenu.add(experimental_item=new JRadioButtonMenuItem(theApp.MODENAMES[4],theApp.isExperimental()));
 		experimental_item.addActionListener(this);
@@ -428,6 +430,7 @@ public class DisplayFrame extends JFrame implements ActionListener {
 		DisplayUTC_item.setSelected(theApp.isLogInUTC());
 		RTTY_item.setSelected(theApp.isRTTY());
 		xpa_linebuffer_item.setSelected(theApp.xpaHandler.getUselinebuffer());
+		XPB_item.setSelected(theApp.isXPB());
 		// Triggers
 		List<Trigger> trigList=theApp.getListTriggers();
 		int a;

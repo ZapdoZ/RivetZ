@@ -1,7 +1,9 @@
 .gradle
 .idea
+.mvn
 /build/
 /out/
+/target/
 
 # Ignore Gradle GUI config
 gradle-app.setting
@@ -14,3 +16,8 @@ gradle-app.setting
 
 # # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
 # gradle/wrapper/gradle-wrapper.properties
+
+# Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
+!maven-wrapper.jar
+
+dependency-reduced-pom.xml
