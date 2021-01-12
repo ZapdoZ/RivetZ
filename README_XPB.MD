@@ -16,7 +16,7 @@ recordings to decode them!
 
 ## Be sure to configure your decoder!
 (Options->XPB Decoder Options)  
-###1. The starting offset  
+### 1. The starting offset  
 When the decoder is ready for a message start, it performs an FFT of the last 100
 samples of the soundcard input every sample. As soon as it hits the defined starting symbol (see 2.),
 it starts counting how often that symbol has been found => For how many samples it
@@ -27,7 +27,7 @@ the decoder should jump to the actual decoding routine.
 **Maximum**: 225-ish  
 The default is 64. When the start of your decoding does not seem plausible (see _How XPB starts_), play
 around with the value until you find it working.  
-###2. The starting symbol  
+### 2. The starting symbol  
 XPB messages always start with the Symbol "8", however there is an option
 for the decoder to accept another value as the symbol to search for.  
 This setting should not be changed unless you know what you're trying to decode
