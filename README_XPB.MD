@@ -1,7 +1,7 @@
 # Read this before attempting XPB decodes
 (2021-01-12; RivetZ Build 91.1; - ZapdoZ)  
 XPB Decoding is still in Beta stage. Decodes come at no warranty.  
-Questions? Feedback? Concerns? send an e-mail to zapdoz9@gmx.de or submit an issue / pull request
+Questions? Feedback? Concerns? Send an e-mail to zapdoz9@gmx.de or submit an issue / pull request
 ## Use recordings
 Since your chances on getting the correct starting offset
 "first try" might be low, always record a transmission, and then
@@ -15,7 +15,7 @@ recordings to decode them!
 
 
 ## Be sure to configure your decoder!
-(Options->XPB Decoder Options)
+(Options->XPB Decoder Options)  
 ###1. The starting offset
 When the decoder is ready for a message start, it performs an FFT of the last 100
 samples of the soundcard input every sample. As soon as it hits the defined starting symbol (see 2.),
@@ -26,7 +26,7 @@ the decoder should jump to the actual decoding routine.
 **Minimum**: 1  
 **Maximum**: 225-ish  
 The default is 64. When the start of your decoding does not seem plausible (see _How XPB starts_), play
-around with the value until you find it working.
+around with the value until you find it working.  
 ###2. The starting symbol
 XPB messages always start with the Symbol "8", however there is an option
 for the decoder to accept another value as the symbol to search for.  
