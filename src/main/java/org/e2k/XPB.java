@@ -15,6 +15,7 @@ package org.e2k;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.Inet4Address;
 
 public class XPB extends MFSK {
 
@@ -28,19 +29,63 @@ public class XPB extends MFSK {
 	private long syncFoundPoint;
 	private int correctionFactor;
 	private int eightcounter = 0;
+	private int startingoffset = 64;
 	private int currentsampleoffset = 121;
+	private String startingsymbol = "8";
 	private double deviation;
+	private int StartTone = 1940;
 
 	public XPB(Rivet tapp, double baud)	{
 		baudRate=baud;
 		theApp=tapp;
 	}
 
+	public void setStartingoffset(int s){
+		startingoffset = s;
+	}
+
+	public int getStartingoffset(){
+		return startingoffset;
+	}
+
+	public void setStartingsymbol(String s){
+		startingsymbol = s;
+	}
+
+	public int getFreqForSymbol(String symbol){
+		switch(symbol){
+			case "0" -> {return 540;}
+			case "1" -> {return 715;}
+			case "2" -> {return 890;}
+			case "3" -> {return 1065;}
+			case "4" -> {return 1240;}
+			case "5" -> {return 1415;}
+			case "6" -> {return 1590;}
+			case "7" -> {return 1765;}
+			case "8" -> {return 1940;}
+			case "9" -> {return 2115;}
+			case "A" -> {return 2290;}
+			case "B" -> {return 2465;}
+			case "C" -> {return 2640;}
+			case "D" -> {return 2815;}
+			case "E" -> {return 2990;}
+			case "F" -> {return 3165;}
+		}
+		return 1940;
+	}
+	public String getStartingsymbol(){
+		return startingsymbol;
+	}
+
+	public int getStartingSymbol_hex(){
+		return Integer.parseInt(startingsymbol, 16);
+	}
+
 	// Change the state and update the status label
 	public void setState(int state) {
 		this.state=state;
 		// Change the status label
-		if (state==1) theApp.setStatusLabel("Waiting for start tone 8");
+		if (state==1) theApp.setStatusLabel("Waiting for start tone " + startingsymbol);
 		else if (state==2) theApp.setStatusLabel("Decoding");
 	}
 
@@ -71,7 +116,6 @@ public class XPB extends MFSK {
 				return false;
 			}
 			samplesPerSymbol=samplesPerSymbol(baudRate,waveData.getSampleRate());
-			System.out.println(waveData.getSampleRate());
 			setState(1);
 			// sampleCount must start negative to account for the buffer gradually filling
 			sampleCount=0-circBuf.retMax();
@@ -84,7 +128,6 @@ public class XPB extends MFSK {
 		}
 		// Hunting for a start tone
 		if (state==1)	{
-				/* TODO: Support for Custom starting numbers (will maybe add in later version)*/
 			String dout;
 			dout = startToneHunt(circBuf, waveData);
 			if (dout!=null){
@@ -113,22 +156,21 @@ public class XPB extends MFSK {
 	// Hunt for an XPB start tone
 	private String startToneHunt (CircularDataBuffer circBuf,WaveData waveData)	{
 		String line;
-		final int StartTone=1940;
+		StartTone=getFreqForSymbol(startingsymbol);
 		// Get the last tone that isn't noise
 	    int tone1=doXPBFFT(circBuf,waveData,0);
 		if (getPercentageOfTotal()<20.0) return null;
 		// if (!getChar(tone1).equals("UNID")) System.out.println(getChar(tone1) + ": " + tone1);
-		if (!getChar(tone1).equals("8")) return null;
+		if (!getChar(tone1).equals(startingsymbol)) return null;
 		eightcounter++;
-		// TODO: User controllable 8counter (maybe in later version...)
-		if (eightcounter == 64){
+		if (eightcounter == startingoffset){
 			syncingsampleCount = 0;
 			setState(2);
 	    	// Tones found
 	    	// Calculate the correction factor, which is not used due to FFT100 being not detailed enough anyway
 	    	correctionFactor=StartTone-tone1;
 	    	// Tell the user
-			line=theApp.getTimeStamp()+" XPB Start 8 Found (corr. factor (not used): "+Integer.toString(correctionFactor)+" Hz)";
+			line=theApp.getTimeStamp()+" XPB Start " + startingsymbol + " Found (corr. factor (not used): "+Integer.toString(correctionFactor)+" Hz)";
 			eightcounter = 0;
 			return line;
 		}

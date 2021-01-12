@@ -24,10 +24,8 @@ import java.io.PipedInputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DateFormat;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.*;
 import java.util.List;
-import java.util.TimeZone;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -48,7 +46,7 @@ public class Rivet {
 	private DisplayView display_view;
 	private static Rivet theApp;
 	private static DisplayFrame window;
-	public final String program_version="RivetZ (Build 91)";
+	public final String program_version="RivetZ (Build 91.1)";
 	public int vertical_scrollbar_value=0;
 	public int horizontal_scrollbar_value=0;
 	public boolean pReady=false;
@@ -517,7 +515,7 @@ public class Rivet {
 			this.soundCardInput=false;
 		}
 		else	{
-			// CROWD36 , XPA , XPA2 , CIS36-50 , FSK200/500 , FSK200/1000 , CCIR493-4 , GW , RTTY , RDFT , Experimental
+			// CROWD36 , XPA , XPA2 , CIS36-50 , FSK200/500 , FSK200/1000 , CCIR493-4 , GW , RTTY , RDFT , Experimental, XPB
 			if ((system==0)||(system==1)||(system==2)||(system==3)||(system==4)||(system==5)||(system==6)||(system==8)||(system==7)||(system==9)||(system==10)||(system==11)||(system==12))	{
 				WaveData waveSetting=new WaveData();
 				waveSetting.setChannels(1);
@@ -704,7 +702,7 @@ public class Rivet {
 			// Stop Bits
 			 switch (stopBitsList.getSelectedIndex())
 				 {
-				 	case 0 -> rttyHandler.setStopBits(1.0);
+				 	 case 0 -> rttyHandler.setStopBits(1.0);
 					 case 1 -> rttyHandler.setStopBits(1.5);
 					 case 2 -> rttyHandler.setStopBits(2.0);
 					 case 3 -> rttyHandler.setStopBits(2.5);
@@ -712,6 +710,36 @@ public class Rivet {
 		}
 	}
 
+	public void setXPBOptions(){
+		// Create a panel that contains the FSK and RTTY options
+		JPanel panel=new JPanel();
+		// Set JPanel layout using GridLayout
+		panel.setLayout(new GridLayout(2,2));
+		// Starting offet
+		JLabel lbStartingOffset= new JLabel("Starting offset: ");
+		JTextField StartingOffsetField=new JTextField(1);
+		StartingOffsetField.setText(Integer.toString(xpbHandler.getStartingoffset()));
+		panel.add(lbStartingOffset);
+		panel.add(StartingOffsetField);
+		// Starting symbol
+		JLabel lbStartingSymbol = new JLabel("Starting Symbol: ");
+		final String[] Symbols = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
+		JComboBox<String> StartingSymbolList=new JComboBox <String>(Symbols);
+		StartingSymbolList.setSelectedIndex(xpbHandler.getStartingSymbol_hex());
+		panel.add(lbStartingSymbol);
+		panel.add(StartingSymbolList);
+		int resp=JOptionPane.showConfirmDialog(window,panel,"XPB Decoder Options",JOptionPane.OK_CANCEL_OPTION,JOptionPane.QUESTION_MESSAGE);
+		if (resp==JOptionPane.OK_OPTION){
+			try{
+			xpbHandler.setStartingoffset(Integer.parseInt(StartingOffsetField.getText()));}
+			catch (Exception e){
+				xpbHandler.setStartingoffset(64);
+				xpbHandler.setStartingsymbol("8");
+				return;
+			}
+			xpbHandler.setStartingsymbol(Integer.toString(StartingSymbolList.getSelectedIndex(), 16).toUpperCase());
+		}
+	}
 	public void setRTTY_FSK_settings(int whatToSet, double value){
 		switch (whatToSet) {
 			// 1 = Shift

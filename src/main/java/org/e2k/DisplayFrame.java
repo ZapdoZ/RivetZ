@@ -37,7 +37,7 @@ public class DisplayFrame extends JFrame implements ActionListener {
 	private JMenuItem XPA_10_item,XPA_20_item,XPA2_item, XPB_item, CROWD36_item,experimental_item,CIS3650_item,FSK200500_item,CCIR493_item,GW_item,RTTY_item;
 	private JMenuItem FSK2001000_item,CROWD36_sync_item, xpa_linebuffer_item ,invert_item,save_settings_item,sample_item,e2k_item,twitter_item;
 	private JMenuItem freeChannelMarkerGW_item,RTTYOptions_item,FSK_item,AddEditTrigger_item,credits_item,system_info_item;
-	private JMenuItem ClearDisplay_item,DisplayBad_item,DisplayUTC_item,UDXF_item,CIS360Options_item;
+	private JMenuItem ClearDisplay_item,DisplayBad_item,DisplayUTC_item,UDXF_item,CIS360Options_item, XPBOptions_item;
 	private List<JMenuItem> trigger_items=new ArrayList<JMenuItem>();
 	private JMenu audioDevicesMenu;
 	private static ArrayList<AudioMixer> devices;
@@ -130,6 +130,8 @@ public class DisplayFrame extends JFrame implements ActionListener {
 		JMenu optionsMenu=new JMenu("Options");
 		optionsMenu.add(RTTYOptions_item=new JMenuItem("Baudot & FSK Options"));		
 		RTTYOptions_item.addActionListener(this);
+		optionsMenu.add(XPBOptions_item=new JMenuItem("XPB Decoder Options"));
+		XPBOptions_item.addActionListener(this);
 		optionsMenu.add(CIS360Options_item=new JMenuItem("CIS36-50 Options"));		
 		CIS360Options_item.addActionListener(this);
 		optionsMenu.add(debug_item=new JRadioButtonMenuItem("Debug Mode",theApp.isDebug()));		
@@ -328,6 +330,10 @@ public class DisplayFrame extends JFrame implements ActionListener {
 		// Set the CROWD36 sync tone
 		if (event_name=="Set the CROWD36 Sync High Tone")	{
 			theApp.getCROWD36SyncHighTone();
+		}
+		// XPB Options
+		if (event_name.equals("XPB Decoder Options")){
+			theApp.setXPBOptions();
 		}
 		// Baudot Options
 		if (event_name=="Baudot & FSK Options")	{
